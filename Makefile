@@ -10,7 +10,7 @@ export LINK_FILES :=
 ######################################SUB_MK###################################################
 SUBDIRS := $(shell find $(CURRENT_DIR) -maxdepth 4 -type d)
 SUBMK += $(foreach dir, $(SUBDIRS), $(wildcard $(dir)/*.mk))
-$(info "$(SUBMK)")
+#$(info "$(SUBMK)")
 include $(SUBMK)
 
 ################################################################################################
@@ -24,6 +24,7 @@ CXX              	:= $(CROSS_COMPILE)g++
 LD               	:= $(CROSS_COMPILE)ld
 OBJCOPY          	:= $(CROSS_COMPILE)objcopy
 OBJDUMP          	:= $(CROSS_COMPILE)objdump
+SIZEINFO            := $(CROSS_COMPILE)size
 
 #############################################################ARM################################
 CPU           		:= -mcpu=cortex-m4
@@ -68,7 +69,7 @@ CXXOBJS          := $(patsubst %, $(OUTPUTDIR)/%, $(CXXFILENAME:.cpp=.o))
 OBJS			 := $(SOBJS) $(COBJS) $(CXXOBJS)
 
 SRCDIRS          := $(dir $(SFILES)) $(dir $(CFILES)) $(dir $(CXXFILES))
-VPATH			:= $(SRCDIRS)
+VPATH			 := $(SRCDIRS)
 
 .PHONY: clean
 
@@ -76,10 +77,11 @@ VPATH			:= $(SRCDIRS)
 #$(info "SFILES = $(SFILES) ")
 #$(info "CFILES = $(CFILES) ")
 
-$(OUTPUTDIR)/$(TARGET).bin:$(OBJS)
-	$(CC) -o $(OUTPUTDIR)/$(TARGET).elf $^ $(LFLAGS) 
-	$(OBJCOPY) -O binary -S $(OUTPUTDIR)/$(TARGET).elf $@
+$(OUTPUTDIR)/$(TARGET).elf:$(OBJS)
+	$(CC) -o $(OUTPUTDIR)/$(TARGET).elf $^ $(LFLAGS)
+	$(OBJCOPY) -O binary -S $(OUTPUTDIR)/$(TARGET).elf $(OUTPUTDIR)/$(TARGET).bin
 	$(OBJDUMP) -D -m arm $(OUTPUTDIR)/$(TARGET).elf > $(OUTPUTDIR)/$(TARGET).dis
+	$(SIZEINFO) $@
 
 $(SOBJS) : $(OUTPUTDIR)/%.o : %.s
 	$(CC) -c $(ASMFLAGS) -o $@ $<
